@@ -17,8 +17,10 @@
             </choices>
             <default>ClaudeCode</default>
         </entry>
+        <!-- Off by default so the mark keeps its brand colour. The percentage text
+             still turns amber/red past the thresholds, so the warning is not lost. -->
         <entry name="colorIconByUsage" type="Bool">
-            <default>true</default>
+            <default>false</default>
         </entry>
         <entry name="showPanelPercentage" type="Bool">
             <default>true</default>
@@ -30,14 +32,14 @@
             <default>false</default>
         </entry>
         <entry name="showPanelBars" type="Bool">
-            <default>true</default>
+            <default>false</default>
         </entry>
 
         <!-- Which limit the panel icon, percentage and countdown track. Empty means
              "whichever limit is currently highest". Otherwise a bucket key such as
              "five_hour", "seven_day" or "model_Fable". -->
         <entry name="panelSource" type="String">
-            <default></default>
+            <default>five_hour</default>
         </entry>
 
         <!-- Written by the applet after each successful fetch: a JSON array of

@@ -101,7 +101,14 @@ Item {
             Text {
                 visible: compact.showPercentage
                 text: compact.dimmed ? "—" : Math.round(compact.bucket.usage * 100) + "%"
-                color: Kirigami.Theme.textColor
+                // Stays plain until you are near a cap, then warns. This is what keeps
+                // the at-a-glance signal when the icon is left in its brand colour.
+                color: {
+                    if (compact.dimmed) return Kirigami.Theme.disabledTextColor;
+                    if (compact.bucket.usage >= 0.90) return Kirigami.Theme.negativeTextColor;
+                    if (compact.bucket.usage >= 0.70) return Kirigami.Theme.neutralTextColor;
+                    return Kirigami.Theme.textColor;
+                }
                 font.pixelSize: compact.readoutFontSize
                 font.bold: true
                 Layout.alignment: Qt.AlignVCenter

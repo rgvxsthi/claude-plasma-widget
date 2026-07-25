@@ -35,19 +35,23 @@ you want — the screenshot above is `[mark] 15% • 3h 52m`:
 | Part | Default | Notes |
 |------|---------|-------|
 | Icon | Claude Code mark | Or the spark glyph, or none |
-| Tint icon by usage | On | Green under 70%, amber to 90%, red beyond |
-| Percentage used | On | |
-| Time until reset | On | Compact form: `4h 1m`, `13m`, `2d 3h` |
+| Tint icon by usage | Off | Keeps the mark in its brand colour |
+| Percentage used | On | Turns amber past 70%, red past 90% |
+| Time until reset | On | Compact form: `3h 52m`, `13m`, `2d 3h` |
 | Which limit is shown | Off | Short tag such as `5h`, `7d`, `Fable` |
-| Usage bars | On | Thin `5h` / `7d` rails |
+| Usage bars | Off | Thin `5h` / `7d` rails |
+
+The colour warning lives on the percentage rather than the icon, so you still see a
+cap coming with the mark left in Claude's own colour. Turn on **Tint the icon by
+usage level** to colour both.
 
 **Track limit** picks which limit drives the icon, percentage, and countdown:
-the highest one (default), the 5-hour limit, the weekly limit, or any per-model
-limit the API reports. The picker is populated from limits actually seen on your
-account, so `Weekly · Fable` appears once your plan reports it.
+the 5-hour limit (default), the weekly limit, any per-model limit the API reports,
+or *Highest limit (automatic)*. The picker is populated from limits actually seen on
+your account, so `Weekly · Fable` appears once your plan reports it.
 
-Tracking *the highest* is the useful default — it is the number that tells you how
-close you are to being cut off, whichever cap that happens to be.
+Pick **Highest** if you would rather be warned about whichever cap you are nearest,
+whichever one that happens to be.
 
 ## Requirements
 

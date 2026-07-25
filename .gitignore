@@ -1,0 +1,11 @@
+# Editor and OS cruft
+*~
+*.swp
+.DS_Store
+.idea/
+.vscode/
+
+# Build artefacts from packaging the plasmoid
+*.plasmoid
+*.tar.gz
+*.zip

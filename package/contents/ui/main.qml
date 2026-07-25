@@ -79,13 +79,6 @@ PlasmoidItem {
 
     // ---------------------------------------------------------------- formatting
 
-    function formatResetTime(isoString) {
-        if (!isoString) return "";
-        var d = new Date(isoString);
-        if (isNaN(d.getTime())) return isoString;
-        return Qt.formatDateTime(d, "hh:mm AP on MMM d");
-    }
-
     // Matches the phrasing used by the Claude desktop app: a countdown while the
     // reset is within a day, an absolute weekday and time beyond that.
     function formatResetSummary(isoString) {
@@ -133,7 +126,7 @@ PlasmoidItem {
         var deltaSeconds = Math.round((Date.now() - root.lastUpdated) / 1000);
         if (deltaSeconds < 60) return i18n("just now");
         var minutes = Math.round(deltaSeconds / 60);
-        if (minutes < 60) return i18np("%1 min ago", "%1 min ago", minutes);
+        if (minutes < 60) return i18nc("how long ago the data was fetched", "%1 min ago", minutes);
         return Qt.formatDateTime(new Date(root.lastUpdated), "hh:mm AP");
     }
 

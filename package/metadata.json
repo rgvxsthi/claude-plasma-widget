@@ -8,10 +8,12 @@
         ],
         "Category": "System Information",
         "Description": "Displays Claude Code token usage as progress bars in the panel",
-        "Icon": "dialog-information",
+        "Icon": "utilities-system-monitor",
         "Id": "com.github.claude-code-usage",
+        "License": "MIT",
         "Name": "Claude Code Usage",
-        "Version": "1.0.0"
+        "Version": "1.1.0",
+        "Website": "https://github.com/fluffyspace/claude-plasma-widget"
     },
     "X-Plasma-API-Minimum-Version": "6.0",
     "KPackageStructure": "Plasma/Applet"

@@ -6,19 +6,80 @@
     <kcfgfile name=""/>
 
     <group name="General">
+        <!-- ============================ Panel appearance ============================ -->
+
+        <!-- Order must match the icon constants in CompactRepresentation.qml. -->
+        <entry name="panelIcon" type="Enum">
+            <choices>
+                <choice name="NoIcon"/>
+                <choice name="ClaudeCode"/>
+                <choice name="Spark"/>
+            </choices>
+            <default>ClaudeCode</default>
+        </entry>
+        <entry name="colorIconByUsage" type="Bool">
+            <default>true</default>
+        </entry>
+        <entry name="showPanelPercentage" type="Bool">
+            <default>true</default>
+        </entry>
+        <entry name="showPanelResetTime" type="Bool">
+            <default>true</default>
+        </entry>
+        <entry name="showPanelLabel" type="Bool">
+            <default>false</default>
+        </entry>
+        <entry name="showPanelBars" type="Bool">
+            <default>true</default>
+        </entry>
+
+        <!-- Which limit the panel icon, percentage and countdown track. Empty means
+             "whichever limit is currently highest". Otherwise a bucket key such as
+             "five_hour", "seven_day" or "model_Fable". -->
+        <entry name="panelSource" type="String">
+            <default></default>
+        </entry>
+
+        <!-- Written by the applet after each successful fetch: a JSON array of
+             {key,label} for every limit the API reported. The config page reads it
+             to populate the limit picker, since it cannot see the applet's state. -->
+        <entry name="knownLimits" type="String">
+            <default></default>
+        </entry>
+
         <entry name="showWeeklyUsage" type="Bool">
             <default>true</default>
         </entry>
         <entry name="showPercentageText" type="Bool">
             <default>false</default>
         </entry>
+
+        <!-- ================================= Popup ================================= -->
+
+        <!-- Per-model weekly limits (Fable, ...) are shown even at 0%, matching the
+             Claude desktop app. Enable this to collapse the popup to used limits. -->
+        <entry name="hideUnusedModelLimits" type="Bool">
+            <default>false</default>
+        </entry>
+
+        <!-- ================================ Polling ================================ -->
+
         <entry name="refreshInterval" type="Int">
             <default>600</default>
             <min>15</min>
-            <max>600</max>
+            <max>3600</max>
         </entry>
         <entry name="credentialsPath" type="String">
             <default>~/.claude/.credentials.json</default>
+        </entry>
+        <entry name="autoRefreshToken" type="Bool">
+            <default>true</default>
+        </entry>
+        <!-- Empty means "search PATH". plasmashell usually runs with a minimal
+             PATH that excludes ~/.local/bin, so the widget prepends the usual
+             install locations; this setting is the manual override. -->
+        <entry name="claudePath" type="String">
+            <default></default>
         </entry>
     </group>
 </kcfg>

@@ -2,57 +2,80 @@ import QtQuick
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
+// A thin, flat usage rail styled after the Claude Desktop plan-usage panel:
+// a low-contrast track with an accent-coloured fill, rather than a bordered box.
 Item {
     id: usageBar
 
     property real value: 0.0        // 0.0 to 1.0
     property string label: ""       // e.g. "5h", "7d"
     property bool showPercentage: false
+    property bool dimmed: false     // no data yet, or an error is showing
 
-    implicitHeight: Kirigami.Units.gridUnit * 0.9
+    // Rail thickness. Deliberately thin — the bar reads as a line, not a container.
+    property int barThickness: Math.max(2, Math.round(Kirigami.Units.gridUnit * 0.22))
+
+    implicitHeight: Math.max(barThickness, Math.round(Kirigami.Units.gridUnit * 0.7))
     implicitWidth: Kirigami.Units.gridUnit * 6
 
+    readonly property real clampedValue: Math.min(1.0, Math.max(0.0, value))
+
+    // Accent blue at normal levels, matching Claude Desktop. The amber/red steps
+    // are kept because a panel widget exists to warn you before you hit the cap.
     readonly property color barColor: {
-        if (value >= 0.90) return Kirigami.Theme.negativeTextColor;
-        if (value >= 0.75) return Kirigami.Theme.neutralTextColor;
-        return Kirigami.Theme.positiveTextColor;
+        if (dimmed) return Kirigami.Theme.disabledTextColor;
+        if (clampedValue >= 0.90) return Kirigami.Theme.negativeTextColor;
+        if (clampedValue >= 0.75) return Kirigami.Theme.neutralTextColor;
+        return Kirigami.Theme.highlightColor;
+    }
+
+    readonly property color trackColor: Qt.rgba(Kirigami.Theme.textColor.r,
+                                                Kirigami.Theme.textColor.g,
+                                                Kirigami.Theme.textColor.b, 0.15)
+
+    // Font sizes derive from the row height, which is zero during the first layout
+    // pass. Clamping avoids "font.pixelSize must be greater than 0" warnings and
+    // text that never becomes visible.
+    function scaledFontSize(basis, factor) {
+        return Math.max(1, Math.round(basis * factor));
     }
 
     RowLayout {
+        id: barRow
         anchors.fill: parent
         spacing: Kirigami.Units.smallSpacing
 
-        // Label
+        // Label. Hidden on narrow panels where it would crowd out the rail itself.
         Text {
             text: usageBar.label
             color: Kirigami.Theme.textColor
-            font.pixelSize: parent.height * 0.7
+            font.pixelSize: usageBar.scaledFontSize(barRow.height, 0.7)
             font.bold: true
             Layout.alignment: Qt.AlignVCenter
-            visible: usageBar.label !== ""
+            visible: usageBar.label !== "" && usageBar.width > Kirigami.Units.gridUnit * 3
         }
 
-        // Bar background
         Rectangle {
-            id: barBackground
+            id: track
             Layout.fillWidth: true
-            Layout.fillHeight: true
-            radius: 3
-            color: Kirigami.Theme.backgroundColor
-            border.color: Qt.rgba(Kirigami.Theme.textColor.r,
-                                   Kirigami.Theme.textColor.g,
-                                   Kirigami.Theme.textColor.b, 0.2)
-            border.width: 1
+            Layout.alignment: Qt.AlignVCenter
+            Layout.preferredHeight: usageBar.barThickness
+            radius: height / 2
+            color: usageBar.trackColor
 
-            // Fill
             Rectangle {
-                id: barFill
+                id: fill
                 anchors.left: parent.left
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
-                width: parent.width * Math.min(1.0, Math.max(0.0, usageBar.value))
+                // Never render a sliver narrower than the rail is tall, otherwise a
+                // small non-zero percentage rounds away to an invisible dot.
+                width: usageBar.clampedValue <= 0
+                    ? 0
+                    : Math.max(parent.width * usageBar.clampedValue, parent.height)
                 radius: parent.radius
                 color: usageBar.barColor
+                opacity: usageBar.dimmed ? 0.4 : 1.0
 
                 Behavior on width {
                     NumberAnimation {
@@ -67,18 +90,16 @@ Item {
                     }
                 }
             }
+        }
 
-            // Percentage overlay
-            Text {
-                anchors.centerIn: parent
-                text: Math.round(usageBar.value * 100) + "%"
-                color: Kirigami.Theme.textColor
-                font.pixelSize: parent.height * 0.65
-                font.bold: true
-                visible: usageBar.showPercentage
-                style: Text.Outline
-                styleColor: Kirigami.Theme.backgroundColor
-            }
+        // Sits beside the rail rather than on top of it — a thin bar has no room
+        // for an overlay.
+        Text {
+            text: Math.round(usageBar.clampedValue * 100) + "%"
+            color: Kirigami.Theme.textColor
+            font.pixelSize: usageBar.scaledFontSize(barRow.height, 0.62)
+            Layout.alignment: Qt.AlignVCenter
+            visible: usageBar.showPercentage && !usageBar.dimmed
         }
     }
 }

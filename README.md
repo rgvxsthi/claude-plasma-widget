@@ -2,7 +2,13 @@
 
 A panel widget that shows your Claude Code token usage at a glance. Sits alongside your clock, network widget, etc.
 
-![Compact view shows two progress bars: 5-hour session and 7-day weekly usage]
+<img src="docs/screenshots/panel.png" alt="Panel readout showing the Claude Code mark, 15% used, and 3h 52m until reset" width="226">
+
+*In the panel: the Claude Code mark, percentage used, and time until reset.*
+
+Click it for the full breakdown:
+
+<img src="docs/screenshots/popup.png" alt="Popup listing the 5-hour limit at 15%, weekly all models at 17%, and weekly Fable at 0%, each with a progress rail and reset time" width="600">
 
 ## Features
 
@@ -11,8 +17,10 @@ A panel widget that shows your Claude Code token usage at a glance. Sits alongsi
 - **Every limit, automatically** — the 5-hour and weekly caps plus any per-model
   weekly limit the API reports (Fable, Sonnet, Opus), with no code change needed
   when a new one appears
-- **Spark panel indicator** — the Claude spark glyph tinted by how close you are to
-  a cap (green under 70%, amber to 90%, red beyond), next to the headline percentage
+- **Composable panel readout** — icon, percentage, countdown, limit tag and bars are
+  independent, and you choose which limit they track
+- **Color-coded** — green under 70%, amber to 90%, red beyond, so you see a cap
+  coming without reading the number
 - **Middle-click to refresh** — without opening the popup
 - **Auto-refreshing** — polls the Anthropic usage API on a configurable interval (default 10 min)
 - **Automatic token refresh** — when the OAuth token expires, the widget re-runs the Claude CLI to renew it
@@ -22,7 +30,7 @@ A panel widget that shows your Claude Code token usage at a glance. Sits alongsi
 ### Panel display
 
 The panel readout is built from independent parts, so you can compose exactly what
-you want — for example `🦀 15% • 4h 1m`:
+you want — the screenshot above is `[mark] 15% • 3h 52m`:
 
 | Part | Default | Notes |
 |------|---------|-------|
@@ -74,6 +82,8 @@ kpackagetool6 -t Plasma/Applet -r com.github.claude-code-usage
 ## Configuration
 
 Right-click the widget → **Configure**:
+
+<img src="docs/screenshots/settings.png" alt="Settings dialog with Panel, Popup, Updates and Authentication sections" width="700">
 
 **Panel** — see the table above, plus **Track limit**.
 

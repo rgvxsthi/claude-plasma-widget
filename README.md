@@ -35,15 +35,25 @@ you want — the screenshot above is `[mark] 15% • 3h 52m`:
 | Part | Default | Notes |
 |------|---------|-------|
 | Icon | Claude Code mark | Or the spark glyph, or none |
-| Tint icon by usage | Off | Keeps the mark in its brand colour |
 | Percentage used | On | Turns amber past 70%, red past 90% |
 | Time until reset | On | Compact form: `3h 52m`, `13m`, `2d 3h` |
 | Which limit is shown | Off | Short tag such as `5h`, `7d`, `Fable` |
 | Usage bars | Off | Thin `5h` / `7d` rails |
 
-The colour warning lives on the percentage rather than the icon, so you still see a
-cap coming with the mark left in Claude's own colour. Turn on **Tint the icon by
-usage level** to colour both.
+**Icon-only mode:** turn off percentage, reset time, label and bars. The icon alone
+carries the signal, and the tooltip still lists every limit on hover. (Turning off
+*everything* would leave nothing to click, so the icon is forced back on.)
+
+**Icon colour** has three modes:
+
+| Mode | Behaviour |
+|------|-----------|
+| Always Claude's colour | Never recolours |
+| Amber past 70%, red past 90% | Claude's colour at rest, warns only when it matters (default) |
+| Green, amber, red by level | Coloured at every level |
+
+The percentage text follows the same 70% / 90% steps, so the warning survives even
+with the icon left in Claude's own colour.
 
 **Track limit** picks which limit drives the icon, percentage, and countdown:
 the 5-hour limit (default), the weekly limit, any per-model limit the API reports,
@@ -96,6 +106,11 @@ Right-click the widget → **Configure**:
 | Setting | Default | Description |
 |---------|---------|-------------|
 | Hide per-model weekly limits until used | Off | Collapses rows sitting at 0% |
+| Show pay-as-you-go credit spend | Off | Adds an **Extra usage** row to the popup and tooltip |
+
+Credit spend only appears if the account actually has pay-as-you-go enabled — the
+API reports it as disabled, with null amounts, on accounts that never turned it on.
+Amounts are shown in the account's own currency, e.g. `12.34 USD of 50.00 USD`.
 
 **Updates**
 

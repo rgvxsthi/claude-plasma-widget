@@ -17,10 +17,16 @@
             </choices>
             <default>ClaudeCode</default>
         </entry>
-        <!-- Off by default so the mark keeps its brand colour. The percentage text
-             still turns amber/red past the thresholds, so the warning is not lost. -->
-        <entry name="colorIconByUsage" type="Bool">
-            <default>false</default>
+        <!-- Order must match the colour-mode constants in CompactRepresentation.qml.
+             NearLimit keeps the mark in Claude's colour until there is something to
+             warn about, then goes amber at 70% and red at 90%. -->
+        <entry name="iconColorMode" type="Enum">
+            <choices>
+                <choice name="BrandOnly"/>
+                <choice name="NearLimit"/>
+                <choice name="Always"/>
+            </choices>
+            <default>NearLimit</default>
         </entry>
         <entry name="showPanelPercentage" type="Bool">
             <default>true</default>
@@ -61,6 +67,12 @@
         <!-- Per-model weekly limits (Fable, ...) are shown even at 0%, matching the
              Claude desktop app. Enable this to collapse the popup to used limits. -->
         <entry name="hideUnusedModelLimits" type="Bool">
+            <default>false</default>
+        </entry>
+
+        <!-- Pay-as-you-go credit spend. Off by default: it is billing information,
+             and the API reports it as disabled on accounts that never enabled it. -->
+        <entry name="showCreditUsage" type="Bool">
             <default>false</default>
         </entry>
 

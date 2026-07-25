@@ -12,14 +12,23 @@ PlasmaExtras.Representation {
     readonly property string statusMsg: root.statusMessage
     readonly property bool hasData: root.hasData
 
+    readonly property int maxPopupHeight: Kirigami.Units.gridUnit * 32
+    readonly property int popupContentHeight:
+        contentLayout.implicitHeight + Kirigami.Units.largeSpacing * 2
+
     implicitWidth: Kirigami.Units.gridUnit * 21
-    implicitHeight: contentLayout.implicitHeight + Kirigami.Units.largeSpacing * 2
+    implicitHeight: popupContentHeight
     Layout.minimumWidth: Kirigami.Units.gridUnit * 18
-    // Kept low so the popup sizes to its rows rather than reserving empty space
-    // when only a couple of limits are reported.
-    Layout.minimumHeight: Kirigami.Units.gridUnit * 6
     Layout.maximumWidth: Kirigami.Units.gridUnit * 32
-    Layout.maximumHeight: Kirigami.Units.gridUnit * 32
+    Layout.maximumHeight: maxPopupHeight
+
+    // Plasma persists the popup height once it has been shown and does not grow it
+    // when rows are added later — enabling the credits row, or a new per-model limit
+    // appearing, would otherwise clip the bottom of the popup. Holding the minimum at
+    // the content height forces Plasma to clamp the stored value back up. The floor
+    // keeps the loading and error placeholders from being squashed.
+    Layout.minimumHeight: Math.max(Kirigami.Units.gridUnit * 6,
+                                   Math.min(popupContentHeight, maxPopupHeight))
 
     // One limit row, laid out the way the Claude desktop app presents them:
     // name on the left, reset summary and percentage right-aligned, thin rail below.
@@ -55,11 +64,7 @@ PlasmaExtras.Representation {
 
             QQC2.Label {
                 text: Math.round(limitRow.usage * 100) + "%"
-                color: {
-                    if (limitRow.usage >= 0.90) return Kirigami.Theme.negativeTextColor;
-                    if (limitRow.usage >= 0.75) return Kirigami.Theme.neutralTextColor;
-                    return Kirigami.Theme.disabledTextColor;
-                }
+                color: root.usageLevelColor(limitRow.usage, Kirigami.Theme.disabledTextColor)
                 horizontalAlignment: Text.AlignRight
                 // Reserve the width of "100%" so the rails below stay aligned
                 // across rows regardless of each row's current value.
@@ -166,6 +171,52 @@ PlasmaExtras.Representation {
                     usage: modelData.usage
                     resetsAt: modelData.resetsAt
                 }
+            }
+        }
+
+        // Pay-as-you-go credits, when the account has them enabled and the user has
+        // opted in. Kept below the limits since it is billing rather than capacity.
+        Kirigami.Separator {
+            Layout.fillWidth: true
+            visible: root.creditsVisible
+        }
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: Math.round(Kirigami.Units.smallSpacing * 1.5)
+            visible: root.creditsVisible
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: Kirigami.Units.smallSpacing
+
+                QQC2.Label {
+                    text: i18n("Extra usage")
+                    elide: Text.ElideRight
+                    Layout.fillWidth: true
+                }
+
+                QQC2.Label {
+                    text: root.creditInfo.summary
+                    color: Kirigami.Theme.disabledTextColor
+                    font: Kirigami.Theme.smallFont
+                }
+
+                QQC2.Label {
+                    visible: root.creditInfo.hasUsage
+                    text: Math.round(root.creditInfo.usage * 100) + "%"
+                    color: root.usageLevelColor(root.creditInfo.usage,
+                                                Kirigami.Theme.disabledTextColor)
+                    horizontalAlignment: Text.AlignRight
+                    Layout.minimumWidth: percentMetrics.width
+                }
+            }
+
+            UsageBar {
+                Layout.fillWidth: true
+                Layout.preferredHeight: Kirigami.Units.gridUnit * 0.4
+                value: root.creditInfo.usage
+                visible: root.creditInfo.hasUsage
             }
         }
 

@@ -50,6 +50,23 @@ PlasmoidItem {
     // cannot spawn a CLI process on every poll.
     readonly property int refreshCooldownMs: 120000
 
+    // Shared usage thresholds — one source of truth, so the panel icon, the
+    // percentage text and the bars cannot drift apart.
+    readonly property real warnThreshold: 0.70
+    readonly property real criticalThreshold: 0.90
+
+    // Claude's own colour, taken from the bundled mark. Used as the resting colour
+    // for panel icons so they look like Claude until there is something to warn about.
+    readonly property color claudeBrandColor: "#d97757"
+
+    // Returns the warning colour for a usage level, or normalColor when there is
+    // nothing to warn about.
+    function usageLevelColor(usage, normalColor) {
+        if (usage >= criticalThreshold) return Kirigami.Theme.negativeTextColor;
+        if (usage >= warnThreshold) return Kirigami.Theme.neutralTextColor;
+        return normalColor;
+    }
+
     switchWidth: Kirigami.Units.gridUnit * 10
     switchHeight: Kirigami.Units.gridUnit * 10
 
@@ -70,6 +87,9 @@ PlasmoidItem {
                 line += " — " + formatResetSummary(bucket.resetsAt);
             }
             lines.push(line);
+        }
+        if (creditsVisible) {
+            lines.push(i18n("Extra usage: %1", creditInfo.summary));
         }
         if (statusMessage !== "") {
             lines.push(statusMessage);
@@ -129,6 +149,76 @@ PlasmoidItem {
         if (minutes < 60) return i18nc("how long ago the data was fetched", "%1 min ago", minutes);
         return Qt.formatDateTime(new Date(root.lastUpdated), "hh:mm AP");
     }
+
+    // ------------------------------------------------------- extra usage / spend
+
+    // Pay-as-you-go credit usage, when the account has it switched on.
+    // { available, usedText, limitText, usage (0..1), hasUsage, summary }
+    property var creditInfo: emptyCreditInfo()
+
+    function emptyCreditInfo() {
+        return { available: false, usedText: "", limitText: "", usage: 0,
+                 hasUsage: false, summary: "" };
+    }
+
+    // Amounts arrive as minor units plus the number of decimal places, so 1234 with
+    // exponent 2 is 12.34. Rendered as "12.34 USD" rather than a symbol, because the
+    // currency is whatever the account is billed in.
+    function formatMinorAmount(amountMinor, currency, exponent) {
+        if (amountMinor == null || isNaN(amountMinor)) return "";
+        var places = (exponent == null || isNaN(exponent)) ? 2 : exponent;
+        var value = amountMinor / Math.pow(10, places);
+        var text = Number(value).toFixed(places);
+        return currency ? text + " " + currency : text;
+    }
+
+    function formatMoneyObject(money) {
+        if (!money) return "";
+        return formatMinorAmount(money.amount_minor, money.currency, money.exponent);
+    }
+
+    // The payload describes credits twice: `extra_usage` (minor units plus
+    // decimal_places) and `spend` (a nested money object). Both sit null/disabled
+    // unless the account has pay-as-you-go turned on, so prefer whichever actually
+    // carries figures and fall back to reporting nothing.
+    function buildCreditInfo(resp) {
+        var info = emptyCreditInfo();
+
+        var extra = resp.extra_usage;
+        var spend = resp.spend;
+
+        if (extra && extra.is_enabled && extra.used_credits != null) {
+            info.available = true;
+            info.usedText = formatMinorAmount(extra.used_credits, extra.currency,
+                                              extra.decimal_places);
+            info.limitText = formatMinorAmount(extra.monthly_limit, extra.currency,
+                                               extra.decimal_places);
+            if (extra.utilization != null && !isNaN(extra.utilization)) {
+                info.usage = Math.max(0, Math.min(1, extra.utilization / 100.0));
+                info.hasUsage = true;
+            }
+        } else if (spend && spend.enabled && spend.used
+                   && spend.used.amount_minor != null) {
+            info.available = true;
+            info.usedText = formatMoneyObject(spend.used);
+            info.limitText = formatMoneyObject(spend.limit);
+            if (spend.percent != null && !isNaN(spend.percent)) {
+                info.usage = Math.max(0, Math.min(1, spend.percent / 100.0));
+                info.hasUsage = true;
+            }
+        }
+
+        if (info.available) {
+            info.summary = info.limitText !== ""
+                ? i18nc("credit spend, e.g. 12.34 USD of 50.00 USD", "%1 of %2",
+                        info.usedText, info.limitText)
+                : info.usedText;
+        }
+        return info;
+    }
+
+    readonly property bool creditsVisible: Plasmoid.configuration.showCreditUsage
+        && creditInfo.available
 
     // ------------------------------------------------------------------- parsing
 
@@ -494,6 +584,7 @@ PlasmoidItem {
                 try {
                     var resp = JSON.parse(xhr.responseText);
                     root.usageBuckets = root.buildUsageBuckets(resp);
+                    root.creditInfo = root.buildCreditInfo(resp);
                     root.publishKnownLimits();
                     root.fiveHourUsage = root.bucketUsage("five_hour");
                     root.sevenDayUsage = root.bucketUsage("seven_day");

@@ -8,7 +8,7 @@ KCM.SimpleKCM {
     id: configPage
 
     property alias cfg_panelIcon: panelIconCombo.currentIndex
-    property alias cfg_colorIconByUsage: colorIconCheck.checked
+    property alias cfg_iconColorMode: iconColorCombo.currentIndex
     property alias cfg_showPanelPercentage: showPercentageCheck.checked
     property alias cfg_showPanelResetTime: showResetTimeCheck.checked
     property alias cfg_showPanelLabel: showLabelCheck.checked
@@ -16,6 +16,7 @@ KCM.SimpleKCM {
     property alias cfg_showWeeklyUsage: showWeeklyCheck.checked
     property alias cfg_showPercentageText: barPercentageCheck.checked
     property alias cfg_hideUnusedModelLimits: hideUnusedCheck.checked
+    property alias cfg_showCreditUsage: showCreditsCheck.checked
     property alias cfg_refreshInterval: refreshSpin.value
     property alias cfg_credentialsPath: credentialsField.text
     property alias cfg_autoRefreshToken: autoRefreshCheck.checked
@@ -85,10 +86,16 @@ KCM.SimpleKCM {
             ]
         }
 
-        QQC2.CheckBox {
-            id: colorIconCheck
-            text: i18n("Tint the icon by usage level")
+        QQC2.ComboBox {
+            id: iconColorCombo
+            Kirigami.FormData.label: i18n("Icon colour:")
             enabled: panelIconCombo.currentIndex !== 0
+            // Index order must match the Enum choices in config/main.xml.
+            model: [
+                i18n("Always Claude's colour"),
+                i18n("Amber past 70%, red past 90%"),
+                i18n("Green, amber, red by level")
+            ]
         }
 
         QQC2.CheckBox {
@@ -134,6 +141,22 @@ KCM.SimpleKCM {
             id: hideUnusedCheck
             Kirigami.FormData.label: i18n("Model limits:")
             text: i18n("Hide per-model weekly limits until they are used")
+        }
+
+        QQC2.CheckBox {
+            id: showCreditsCheck
+            Kirigami.FormData.label: i18n("Extra usage:")
+            text: i18n("Show pay-as-you-go credit spend")
+        }
+
+        QQC2.Label {
+            Layout.fillWidth: true
+            Layout.maximumWidth: Kirigami.Units.gridUnit * 22
+            visible: showCreditsCheck.checked
+            text: i18n("Adds your credit spend to the popup and tooltip. Nothing is shown unless the account has pay-as-you-go usage enabled.")
+            wrapMode: Text.WordWrap
+            font: Kirigami.Theme.smallFont
+            color: Kirigami.Theme.disabledTextColor
         }
 
         Kirigami.Separator {

@@ -22,12 +22,11 @@ Item {
 
     // Accent blue at normal levels, matching Claude Desktop. The amber/red steps
     // are kept because a panel widget exists to warn you before you hit the cap.
-    readonly property color barColor: {
-        if (dimmed) return Kirigami.Theme.disabledTextColor;
-        if (clampedValue >= 0.90) return Kirigami.Theme.negativeTextColor;
-        if (clampedValue >= 0.75) return Kirigami.Theme.neutralTextColor;
-        return Kirigami.Theme.highlightColor;
-    }
+    // Thresholds come from main.qml so the bars, the icon and the percentage text
+    // all step at the same points.
+    readonly property color barColor: dimmed
+        ? Kirigami.Theme.disabledTextColor
+        : root.usageLevelColor(clampedValue, Kirigami.Theme.highlightColor)
 
     readonly property color trackColor: Qt.rgba(Kirigami.Theme.textColor.r,
                                                 Kirigami.Theme.textColor.g,

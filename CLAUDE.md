@@ -62,7 +62,22 @@ the refresh data source is surfaced as "Claude CLI not found".
 
 **SparkIcon.qml** draws the Claude spark glyph on a `Canvas` from the 16x16 path used by ClaudeUsageBar. **images/claude-code-icon.svg** is the Claude Code mark, a single-path monochrome SVG rendered through `Kirigami.Icon` with `isMask` so it can be tinted by usage level.
 
-**Two distinct colour scales, deliberately:** the panel icon uses 70/90 (matching ClaudeUsageBar's menu bar spark), the bars use 75/90. Don't "unify" them without deciding which is right.
+**One colour scale:** `warnThreshold` (70%) and `criticalThreshold` (90%) live in main.qml, and everything colour-coded goes through `usageLevelColor(usage, normalColor)`. Don't reintroduce inline thresholds — the icon, percentage text, bars and popup rows previously drifted apart at 70 vs 75.
+
+## Extra usage / spend
+
+The payload describes pay-as-you-go credits **twice**, and both are null/disabled unless the account enabled it:
+
+- `extra_usage` — `used_credits` / `monthly_limit` as minor units, with `decimal_places` and `currency` alongside, plus `is_enabled`.
+- `spend` — `used` and `limit` as nested money objects `{amount_minor, currency, exponent}`, plus `percent` and `enabled`.
+
+`buildCreditInfo()` prefers whichever actually carries figures and otherwise reports nothing. Amounts are rendered as `12.34 USD` rather than with a symbol, because the currency is whatever the account is billed in. Gated behind `showCreditUsage`, off by default — it is billing information.
+
+## QML gotchas hit here
+
+- **`contentHeight` is FINAL on `PlasmaExtras.Representation`.** Declaring a property with that name fails the whole component with "Cannot override FINAL property", which surfaces as "Type FullRepresentation unavailable". `qmllint` does *not* catch it; the journal does. The popup's own is `popupContentHeight`.
+- **Plasma persists popup height and never grows it.** Once shown, `popupHeight` is stored in `plasma-org.kde.plasma.desktop-appletsrc`; adding a row later clips the bottom. `Layout.minimumHeight` is held at the content height to force Plasma to clamp the stored value back up.
+- **`console.log()` is filtered** in plasmashell; `console.warn()` reaches the journal. Useful for probing the API payload shape.
 
 ## Usage buckets
 

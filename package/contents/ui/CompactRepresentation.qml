@@ -12,13 +12,24 @@ Item {
     readonly property int iconClaudeCode: 1
     readonly property int iconSpark: 2
 
-    readonly property int panelIcon: Plasmoid.configuration.panelIcon
-    readonly property bool showIcon: panelIcon !== iconNone
+    // Icon colour modes, matching the Enum order declared in config/main.xml.
+    readonly property int colorBrandOnly: 0
+    readonly property int colorNearLimit: 1
+    readonly property int colorAlways: 2
+
+    readonly property int configuredIcon: Plasmoid.configuration.panelIcon
     readonly property bool showPercentage: Plasmoid.configuration.showPanelPercentage
     readonly property bool showResetTime: Plasmoid.configuration.showPanelResetTime
     readonly property bool showLabel: Plasmoid.configuration.showPanelLabel
     readonly property bool showBars: Plasmoid.configuration.showPanelBars
-    readonly property bool colorIcon: Plasmoid.configuration.colorIconByUsage
+    readonly property int iconColorMode: Plasmoid.configuration.iconColorMode
+
+    // Turning off every part would leave an invisible, unclickable widget, so the
+    // icon is forced back on as a floor.
+    readonly property bool wouldBeEmpty: configuredIcon === iconNone && !showPercentage
+        && !showResetTime && !showLabel && !showBars
+    readonly property int panelIcon: wouldBeEmpty ? iconClaudeCode : configuredIcon
+    readonly property bool showIcon: panelIcon !== iconNone
 
     // The readout block is anything that is not the bars.
     readonly property bool showReadout: showIcon || showPercentage || showResetTime || showLabel
@@ -33,13 +44,23 @@ Item {
     readonly property bool dimmed: hasError || isLoading
     readonly property bool isVertical: Plasmoid.formFactor === PlasmaCore.Types.Vertical
 
-    // Same steps the ClaudeUsageBar menu bar app uses: green until 70%, amber to
-    // 90%, red beyond.
-    readonly property color usageColor: {
-        if (dimmed) return Kirigami.Theme.disabledTextColor;
-        if (bucket.usage >= 0.90) return Kirigami.Theme.negativeTextColor;
-        if (bucket.usage >= 0.70) return Kirigami.Theme.neutralTextColor;
-        return Kirigami.Theme.positiveTextColor;
+    // The icon's resting colour: Claude's own, or green when the user has asked for
+    // a colour at every level.
+    readonly property color iconRestingColor: iconColorMode === colorAlways
+        ? Kirigami.Theme.positiveTextColor
+        : root.claudeBrandColor
+
+    readonly property color iconColor: dimmed
+        ? Kirigami.Theme.disabledTextColor
+        : root.usageLevelColor(bucket.usage, iconRestingColor)
+
+    // BrandOnly never recolours. NearLimit only masks once there is a warning, which
+    // leaves the mark pixel-identical to its source SVG the rest of the time.
+    readonly property bool tintIcon: {
+        if (dimmed) return true;
+        if (iconColorMode === colorBrandOnly) return false;
+        if (iconColorMode === colorAlways) return true;
+        return bucket.usage >= root.warnThreshold;
     }
 
     // A vertical panel constrains width, a horizontal one constrains height, so the
@@ -73,16 +94,18 @@ Item {
             Kirigami.Icon {
                 visible: compact.panelIcon === compact.iconClaudeCode
                 source: Qt.resolvedUrl("../images/claude-code-icon.svg")
-                isMask: compact.colorIcon
-                color: compact.usageColor
+                isMask: compact.tintIcon
+                color: compact.iconColor
                 Layout.alignment: Qt.AlignVCenter
                 Layout.preferredHeight: compact.iconSize
                 Layout.preferredWidth: compact.iconSize
             }
 
+            // The spark has no colour of its own, so it is always painted; the
+            // resting colour is Claude's, matching the mark.
             SparkIcon {
                 visible: compact.panelIcon === compact.iconSpark
-                color: compact.colorIcon ? compact.usageColor : Kirigami.Theme.textColor
+                color: compact.iconColor
                 Layout.alignment: Qt.AlignVCenter
                 Layout.preferredHeight: compact.iconSize
                 Layout.preferredWidth: compact.iconSize
@@ -103,12 +126,9 @@ Item {
                 text: compact.dimmed ? "—" : Math.round(compact.bucket.usage * 100) + "%"
                 // Stays plain until you are near a cap, then warns. This is what keeps
                 // the at-a-glance signal when the icon is left in its brand colour.
-                color: {
-                    if (compact.dimmed) return Kirigami.Theme.disabledTextColor;
-                    if (compact.bucket.usage >= 0.90) return Kirigami.Theme.negativeTextColor;
-                    if (compact.bucket.usage >= 0.70) return Kirigami.Theme.neutralTextColor;
-                    return Kirigami.Theme.textColor;
-                }
+                color: compact.dimmed
+                    ? Kirigami.Theme.disabledTextColor
+                    : root.usageLevelColor(compact.bucket.usage, Kirigami.Theme.textColor)
                 font.pixelSize: compact.readoutFontSize
                 font.bold: true
                 Layout.alignment: Qt.AlignVCenter
